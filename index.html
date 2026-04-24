@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arak CC NC Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;700;900&family=Noto+Sans:wght@300;400;500;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --turquoise:#70c5cc;--light-blue:#cee8eb;--light-brown:#c98e5f;--eggshell:#f1e8da;
+  --grey:#808080;--dark-brown:#736357;--dark-green:#1e6533;--light-green:#80b242;
+  --salmon:#ef8267;--beige:#eab7a6;--bg:#f5f9fa;--surface:#ffffff;--surface2:#f0f8f9;
+  --surface3:#e3f4f6;--border:#c5e0e3;--border2:#a8d4d8;--text:#1a3a3d;--text2:#3d6b6f;
+  --muted:#7aabb0;--cc-main:#ef8267;--cc-light:#fdf0ec;--cc-mid:#f9d3c8;--cc-border:#f4b5a3;
+  --ncr-main:#70c5cc;--ncr-light:#eaf7f8;--ncr-mid:#b2e3e7;--ncr-border:#7dcbd2;
+  --radius:10px;--radius-sm:6px;
+}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans Thai','Noto Sans',sans-serif;font-size:13px;min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2.5rem 2rem;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(112,197,204,0.15);}
+.login-logo-wrap{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:1.5rem;}
+.login-logo-mark{width:44px;height:44px;border-radius:11px;background:var(--turquoise);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;font-family:'Noto Sans',sans-serif;}
+.login-brand{font-size:18px;font-weight:700;color:var(--text)}
+.login-brand span{font-weight:300;color:var(--muted)}
+.login-subtitle{font-size:13px;color:var(--text2);text-align:center;margin-bottom:1.75rem}
+.login-label{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.4px}
+.login-input-wrap{position:relative;margin-bottom:1rem}
+.login-input-wrap input{width:100%;padding:10px 44px 10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'Noto Sans Thai','Noto Sans',sans-serif;font-size:13px;color:var(--text);background:#fff;transition:.15s;outline:none;}
+.login-input-wrap input:focus{border-color:var(--turquoise);box-shadow:0 0 0 3px rgba(112,197,204,0.15)}
+.toggle-pw-btn{position:absolute;right:0;top:0;height:100%;width:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;font-family:inherit;}
+.toggle-pw-btn:hover{color:var(--turquoise)}
+.login-error{background:var(--cc-light);border:1px solid var(--cc-border);border-radius:var(--radius-sm);padding:9px 14px;font-size:12px;color:#8b3620;margin-bottom:1rem;display:none;}
+.login-btn{width:100%;padding:11px;background:var(--turquoise);border:none;border-radius:var(--radius-sm);font-family:'Noto Sans Thai','Noto Sans',sans-serif;font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:.15s;}
+.login-btn:hover{background:#5ab5bc}
+.login-btn:active{transform:scale(.98)}
+.login-btn:disabled{background:var(--border);cursor:not-allowed}
+.login-attempts{font-size:11px;color:var(--muted);text-align:center;margin-top:10px;min-height:16px}
+
+/* APP */
+#appWrap{display:none}
+.topbar{background:var(--turquoise);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.tb-left{display:flex;align-items:center;gap:14px}
+.logo-mark{width:36px;height:36px;border-radius:9px;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;letter-spacing:-1px;font-family:'Noto Sans',sans-serif;}
+.tb-title{font-size:15px;font-weight:700;color:#fff;letter-spacing:.2px}
+.tb-title span{font-weight:300;opacity:.85}
+.tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.tb-chip{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);border-radius:20px;padding:5px 14px;font-size:11px;color:#fff;cursor:pointer;transition:.15s;font-family:'Noto Sans Thai','Noto Sans',sans-serif;}
+.tb-chip:hover{background:rgba(255,255,255,0.35)}
+.tb-chip.danger{background:rgba(239,130,103,0.3);border-color:rgba(239,130,103,0.5);}
+.tb-chip.danger:hover{background:rgba(239,130,103,0.5);}
+.tb-time{font-size:11px;color:rgba(255,255,255,0.75)}
+.tb-time b{color:#fff}
+#ccFile,#ncrFile{display:none}
+
+/* SAVE INDICATOR */
+.save-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(128,178,66,0.25);border:1px solid rgba(128,178,66,0.5);border-radius:20px;padding:4px 10px;font-size:10px;color:#fff;transition:.3s;}
+.save-badge.unsaved{background:rgba(239,130,103,0.25);border-color:rgba(239,130,103,0.5);}
+.save-dot{width:6px;height:6px;border-radius:50%;background:#80b242;}
+.save-badge.unsaved .save-dot{background:#ef8267;}
+
+/* UPLOAD BAR */
+.upload-bar{background:var(--light-blue);border-bottom:1px solid var(--border);padding:8px 28px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.upload-label{font-size:11px;color:var(--text2);font-weight:500;white-space:nowrap}
+.upload-chip{background:#fff;border:1px solid var(--border2);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--text2);cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px;font-family:'Noto Sans Thai','Noto Sans',sans-serif;}
+.upload-chip:hover{border-color:var(--turquoise);color:var(--text)}
+.upload-chip.active{border-color:var(--turquoise);color:var(--turquoise);font-weight:500}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:var(--turquoise)}
+.chip-dot.orange{background:#ef8267}
+.upload-hint{font-size:11px;color:var(--muted);margin-left:auto}
+
+/* PAGE TABS */
+.page-nav{background:var(--surface);border-bottom:2px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:0}
+.page-tab{padding:14px 24px;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:.15s;display:flex;align-items:center;gap:8px;user-select:none}
+.page-tab:hover{color:var(--text2)}
+.page-tab.active-cc{color:var(--cc-main);border-bottom-color:var(--cc-main)}
+.page-tab.active-ncr{color:var(--ncr-main);border-bottom-color:var(--ncr-main)}
+.tab-pill{border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700}
+.pill-tab-cc{background:var(--cc-mid);color:#8b3620}
+.pill-tab-ncr{background:var(--ncr-mid);color:#145f66}
+.page-content{display:none}
+.page-content.active{display:block}
+
+/* SINGLE PANEL */
+.single-panel{padding:20px 28px}
+.single-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.single-header-left{display:flex;align-items:center;gap:10px}
+.single-filters{display:flex;gap:6px;flex-wrap:wrap}
+.single-filters select{background:#fff;border:1px solid var(--border);color:var(--text);padding:5px 26px 5px 10px;border-radius:var(--radius-sm);font-family:'Noto Sans Thai','Noto Sans',sans-serif;font-size:11px;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%237aabb0' d='M5 7L0 2h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.single-filters select:focus{outline:none;border-color:var(--turquoise)}
+.charts-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.charts-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-full{margin-bottom:12px}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi.cc::before{background:var(--cc-main)}
+.kpi.ncr::before{background:var(--ncr-main)}
+.kpi.warm::before{background:var(--light-brown)}
+.kpi.green::before{background:var(--light-green)}
+.kpi.teal::before{background:var(--turquoise)}
+.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;font-weight:500}
+.kpi-val{font-size:28px;font-weight:900;line-height:1;color:var(--text)}
+.kpi-val.cc{color:var(--cc-main)}.kpi-val.ncr{color:var(--ncr-main)}.kpi-val.warm{color:var(--light-brown)}.kpi-val.green{color:var(--dark-green)}.kpi-val.teal{color:#1a8b93}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:4px}
+
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.card-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;display:flex;align-items:center;gap:6px;font-weight:500;}
+.ct-bar{width:3px;height:11px;border-radius:2px;flex-shrink:0}
+.bar-cc{background:var(--cc-main)}.bar-ncr{background:var(--ncr-main)}.bar-teal{background:var(--turquoise)}.bar-warm{background:var(--light-brown)}.bar-green{background:var(--dark-green)}
+.chart-wrap{position:relative}.h150{height:150px}.h185{height:185px}.h120{height:120px}
+
+/* STATUS */
+.status-list{display:flex;flex-direction:column;gap:5px;max-height:148px;overflow:auto}
+.status-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--bg)}
+.status-row:last-child{border-bottom:none}
+.s-badge{border-radius:4px;padding:2px 8px;font-size:10px;font-weight:600;white-space:nowrap;}
+.s-closed-pos{background:#e8f7ee;color:#1e6533}.s-closed-neu{background:var(--ncr-light);color:#1a7a82}.s-closed-neg{background:var(--cc-light);color:#8b3620}.s-pending{background:#fef9ec;color:#7a5a00}.s-default{background:var(--surface2);color:var(--text2)}
+.s-count{font-size:16px;font-weight:700;color:var(--text)}
+
+/* TABLE */
+.section-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;font-weight:500}
+.tbl-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:11px}
+thead th{background:var(--surface2);padding:8px 10px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);white-space:nowrap;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--border);}
+tbody tr{border-bottom:1px solid var(--bg);transition:.1s}
+tbody tr:hover{background:var(--surface2)}
+tbody tr:last-child{border-bottom:none}
+td{padding:7px 10px;vertical-align:middle;line-height:1.3}
+.td-id{color:var(--muted);font-size:10px;font-weight:500}
+.td-date{white-space:nowrap;color:var(--muted);font-size:10px}
+.badge{display:inline-block;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:600;white-space:nowrap}
+.b-cc{background:var(--cc-light);color:#8b3620}.b-ncr{background:var(--ncr-light);color:#145f66}.b-yes{background:var(--cc-light);color:#8b3620}.b-no{background:#eaf7ee;color:#1a5c28}
+.td-clip{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2)}
+.td-detail{max-width:200px;color:var(--text2)}
+.td-detail-inner{display:flex;align-items:center;gap:4px}
+.td-detail-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.btn-expand{flex-shrink:0;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--turquoise);font-size:9px;padding:1px 5px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.1s}
+.btn-expand:hover{background:var(--ncr-light);border-color:var(--turquoise)}
+.pagi-wrap{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-top:1px solid var(--border);background:var(--surface2);border-radius:0 0 var(--radius) var(--radius)}
+.pagi-info{font-size:10px;color:var(--muted)}
+.pagi-btns{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.pagi-btn{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:10px;color:var(--text2);cursor:pointer;font-family:inherit;transition:.1s;min-width:26px;text-align:center}
+.pagi-btn:hover:not([disabled]){border-color:var(--turquoise);color:var(--turquoise)}
+.pagi-btn.active{background:var(--turquoise);border-color:var(--turquoise);color:#fff}
+.pagi-btn[disabled]{opacity:.4;cursor:not-allowed}
+
+/* COLUMN HEADERS */
+.ch-pill{border-radius:5px;padding:3px 10px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.pill-cc{background:var(--cc-mid);color:#8b3620;border:1px solid var(--cc-border)}
+.pill-ncr{background:var(--ncr-mid);color:#145f66;border:1px solid var(--ncr-border)}
+.ch-name{font-size:13px;font-weight:700;color:var(--text)}
+.ch-sub{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,58,61,0.5);z-index:9000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);max-width:520px;width:100%;max-height:80vh;overflow:auto;padding:1.25rem}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.modal-title{font-size:12px;font-weight:700;color:var(--text)}
+.modal-close{background:none;border:none;cursor:pointer;font-size:20px;color:var(--muted);line-height:1;padding:0}
+.modal-close:hover{color:var(--text)}
+.modal-body{font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.modal-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.modal-chip{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:10px;color:var(--text2)}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-title{font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.empty-sub{font-size:12px}
+
+/* CONFIRM MODAL */
+.confirm-overlay{position:fixed;inset:0;background:rgba(26,58,61,0.5);z-index:9500;display:none;align-items:center;justify-content:center;padding:20px}
+.confirm-box{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);max-width:360px;width:100%;padding:1.5rem}
+.confirm-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px}
+.confirm-body{font-size:12px;color:var(--text2);margin-bottom:1.25rem;line-height:1.6}
+.confirm-btns{display:flex;gap:8px;justify-content:flex-end}
+.confirm-btn{padding:8px 18px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:none;transition:.15s;}
+.confirm-btn.cancel{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
+.confirm-btn.cancel:hover{border-color:var(--turquoise);color:var(--turquoise)}
+.confirm-btn.danger{background:#ef8267;color:#fff;}
+.confirm-btn.danger:hover{background:#d96b52}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+@media(max-width:860px){.charts-grid-3,.charts-grid-2{grid-template-columns:1fr}.kpi-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo-wrap">
+      <div class="login-logo-mark">ar</div>
+      <div class="login-brand">Arak <span>/ CC NC Dashboard</span></div>
+    </div>
+    <div class="login-subtitle">กรอก password เพื่อเข้าใช้งาน</div>
+    <div class="login-error" id="loginError">Password ไม่ถูกต้อง กรุณาลองใหม่</div>
+    <label class="login-label">Password</label>
+    <div class="login-input-wrap">
+      <input type="password" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="toggle-pw-btn" onclick="togglePw()" id="toggleBtn">แสดง</button>
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">เข้าสู่ระบบ</button>
+    <div class="login-attempts" id="loginAttempts"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appWrap">
+<div class="topbar">
+  <div class="tb-left">
+    <div class="logo-mark">ar</div>
+    <div><div class="tb-title">Arak <span>/ CC NC Dashboard</span></div></div>
+  </div>
+  <div class="tb-right">
+    <div id="saveBadge" class="save-badge"><div class="save-dot"></div><span id="saveText">บันทึกแล้ว</span></div>
+    <div class="tb-chip" onclick="document.getElementById('ccFile').click()">+ อัปโหลด CC</div>
+    <div class="tb-chip" onclick="document.getElementById('ncrFile').click()">+ อัปโหลด NCR</div>
+    <div class="tb-time">อัปเดต: <b id="lastUpdate">—</b></div>
+    <div class="tb-chip danger" onclick="showClearConfirm()">ล้างข้อมูล</div>
+    <div class="tb-chip" onclick="doLogout()" style="background:rgba(255,255,255,0.1)">ออกจากระบบ</div>
+    <input type="file" id="ccFile" accept=".xlsx,.xls" onchange="loadCC(this)">
+    <input type="file" id="ncrFile" accept=".xlsx,.xls" onchange="loadNCR(this)">
+  </div>
+</div>
+
+<div class="upload-bar">
+  <span class="upload-label">ไฟล์ที่โหลด :</span>
+  <div class="upload-chip active" id="ccChip" onclick="document.getElementById('ccFile').click()">
+    <div class="chip-dot" id="ccDot"></div><span id="ccFileName">Customer Complaint Report</span>
+  </div>
+  <div class="upload-chip active" id="ncrChip" onclick="document.getElementById('ncrFile').click()">
+    <div class="chip-dot" id="ncrDot"></div><span id="ncrFileName">Non-Conformity Report</span>
+  </div>
+  <span class="upload-hint" id="uploadHint">⚠️ ยังไม่มีข้อมูล — คลิกเพื่ออัปโหลดไฟล์ Excel</span>
+</div>
+
+<!-- PAGE TABS -->
+<div class="page-nav">
+  <div class="page-tab active-cc" id="tabBtnCC" onclick="switchPage('cc')">
+    <span class="tab-pill pill-tab-cc">CC</span> Customer Complaint
+  </div>
+  <div class="page-tab" id="tabBtnNCR" onclick="switchPage('ncr')">
+    <span class="tab-pill pill-tab-ncr">NCR</span> Non-Conformity
+  </div>
+</div>
+
+<!-- CC PAGE -->
+<div class="page-content active" id="pageCC">
+  <div class="single-panel">
+    <div class="single-header">
+      <div class="single-header-left">
+        <div class="ch-pill pill-cc">CC</div>
+        <div><div class="ch-name">Customer Complaint Report</div><div class="ch-sub">รายงานข้อร้องเรียนลูกค้า</div></div>
+      </div>
+      <div class="single-filters">
+        <select id="ccBranchFilter" onchange="renderCC()"><option value="">ทุกสาขา</option></select>
+        <select id="ccDeptFilter" onchange="renderCC()"><option value="">ทุกหน่วยงาน</option></select>
+        <select id="ccYearFilter" onchange="syncMonthOptions('cc');renderCC()"><option value="">ทุกปี</option></select>
+        <select id="ccMonthFilter" onchange="renderCC()"><option value="">ทุกเดือน</option></select>
+      </div>
+    </div>
+    <div id="ccEmpty" class="empty-state" style="display:none">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">ยังไม่มีข้อมูล CC</div>
+      <div class="empty-sub">คลิก "+ อัปโหลด CC" ด้านบนเพื่อโหลดไฟล์ Excel</div>
+    </div>
+    <div id="ccContent">
+      <div class="kpi-row" id="ccKpi"></div>
+      <div class="chart-full card">
+        <div class="card-title"><div class="ct-bar bar-cc"></div>แนวโน้มรายเดือน</div>
+        <div class="chart-wrap" style="height:220px"><canvas id="ccTrendChart"></canvas></div>
+      </div>
+      <div class="charts-grid-3">
+        <div class="card"><div class="card-title"><div class="ct-bar bar-warm"></div>สัดส่วนตามสาขา</div><div class="chart-wrap h185"><canvas id="ccBranchChart"></canvas></div></div>
+        <div class="card"><div class="card-title"><div class="ct-bar bar-teal"></div>หน่วยงานที่ถูกร้องเรียน</div><div class="chart-wrap h185"><canvas id="ccDeptChart"></canvas></div></div>
+        <div class="card"><div class="card-title"><div class="ct-bar bar-teal"></div>กระบวนการที่ถูก Complain</div><div class="chart-wrap h185"><canvas id="ccProcessChart"></canvas></div></div>
+      </div>
+      <div class="charts-grid-2">
+        <div class="card"><div class="card-title"><div class="ct-bar bar-cc"></div>ต้องคืนเงิน / Credit Note</div><div class="chart-wrap h150"><canvas id="ccRefundChart"></canvas></div></div>
+        <div class="card"><div class="card-title"><div class="ct-bar bar-green"></div>สถานะการจัดการ</div><div class="status-list" id="ccStatusList"></div></div>
+      </div>
+      <div class="section-label" id="ccTableLabel">ทุกเคส</div>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>#</th><th>วันที่</th><th>สาขา</th><th>หน่วยงาน</th><th>กระบวนการ</th><th>รายละเอียด</th><th>คืนเงิน</th></tr></thead>
+        <tbody id="ccTableBody"></tbody></table>
+        <div class="pagi-wrap"><div class="pagi-info" id="ccPageInfo"></div><div class="pagi-btns" id="ccPageBtns"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NCR PAGE -->
+<div class="page-content" id="pageNCR">
+  <div class="single-panel">
+    <div class="single-header">
+      <div class="single-header-left">
+        <div class="ch-pill pill-ncr">NCR</div>
+        <div><div class="ch-name">Non-Conformity Report</div><div class="ch-sub">รายงานความไม่สอดคล้องตามข้อกำหนด</div></div>
+      </div>
+      <div class="single-filters">
+        <select id="ncrBranchFilter" onchange="renderNCR()"><option value="">ทุกสาขา</option></select>
+        <select id="ncrDeptFilter" onchange="renderNCR()"><option value="">ทุกหน่วยงาน</option></select>
+        <select id="ncrYearFilter" onchange="syncMonthOptions('ncr');renderNCR()"><option value="">ทุกปี</option></select>
+        <select id="ncrMonthFilter" onchange="renderNCR()"><option value="">ทุกเดือน</option></select>
+      </div>
+    </div>
+    <div id="ncrEmpty" class="empty-state" style="display:none">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">ยังไม่มีข้อมูล NCR</div>
+      <div class="empty-sub">คลิก "+ อัปโหลด NCR" ด้านบนเพื่อโหลดไฟล์ Excel</div>
+    </div>
+    <div id="ncrContent">
+      <div class="kpi-row" id="ncrKpi"></div>
+      <div class="chart-full card">
+        <div class="card-title"><div class="ct-bar bar-ncr"></div>แนวโน้มรายเดือน</div>
+        <div class="chart-wrap" style="height:220px"><canvas id="ncrTrendChart"></canvas></div>
+      </div>
+      <div class="charts-grid-3">
+        <div class="card"><div class="card-title"><div class="ct-bar bar-warm"></div>สัดส่วนตามสาขา</div><div class="chart-wrap h185"><canvas id="ncrBranchChart"></canvas></div></div>
+        <div class="card"><div class="card-title"><div class="ct-bar bar-teal"></div>หน่วยงานที่พบความไม่สอดคล้อง</div><div class="chart-wrap h185"><canvas id="ncrDeptChart"></canvas></div></div>
+        <div class="card"><div class="card-title"><div class="ct-bar bar-teal"></div>กระบวนการที่ไม่สอดคล้อง</div><div class="chart-wrap h185"><canvas id="ncrProcessChart"></canvas></div></div>
+      </div>
+      <div class="chart-full card">
+        <div class="card-title"><div class="ct-bar bar-ncr"></div>หัวข้อที่พบบ่อย (Top 8)</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="ncrIssueChart"></canvas></div>
+      </div>
+      <div class="section-label" id="ncrTableLabel">ทุกเคส</div>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>#</th><th>วันที่</th><th>สาขา</th><th>หน่วยงาน</th><th>กระบวนการ</th><th>รายละเอียด</th></tr></thead>
+        <tbody id="ncrTableBody"></tbody></table>
+        <div class="pagi-wrap"><div class="pagi-info" id="ncrPageInfo"></div><div class="pagi-btns" id="ncrPageBtns"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- end appWrap -->
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">รายละเอียด</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-meta" id="modalMeta"></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- CLEAR CONFIRM MODAL -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-title">⚠️ ล้างข้อมูลทั้งหมด?</div>
+    <div class="confirm-body">ข้อมูล CC และ NCR ที่บันทึกไว้ใน browser จะถูกลบออกทั้งหมด<br>ต้องอัปโหลดไฟล์ Excel ใหม่อีกครั้ง</div>
+    <div class="confirm-btns">
+      <button class="confirm-btn cancel" onclick="hideClearConfirm()">ยกเลิก</button>
+      <button class="confirm-btn danger" onclick="clearAllData()">ล้างข้อมูล</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══ CONFIG ══
+const CORRECT_PW = 'Arak@123';
+const LS_CC  = 'arak_cc_rows';
+const LS_NCR = 'arak_ncr_rows';
+const LS_CC_NAME  = 'arak_cc_filename';
+const LS_NCR_NAME = 'arak_ncr_filename';
+const LS_CC_TIME  = 'arak_cc_time';
+const LS_NCR_TIME = 'arak_ncr_time';
+
+// ══ STATE ══
+let ALL_CC_ROWS  = [];
+let ALL_NCR_ROWS = [];
+let ccData = null, ncrData = null;
+let ccPage = 1, ncrPage = 1;
+let ccFilteredRows = [], ncrFilteredRows = [];
+const charts = {};
+let failCount = 0, lockUntil = 0;
+
+const MONTH_NAMES=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const ARAK_PALETTE=['#70c5cc','#ef8267','#80b242','#c98e5f','#1e6533','#736357','#cee8eb','#eab7a6'];
+const CC_COL='#ef8267', CC_BG='rgba(239,130,103,0.15)';
+const NCR_COL='#70c5cc', NCR_BG='rgba(112,197,204,0.15)';
+const PAGE_SIZE = 20;
+
+Chart.defaults.font.family = "'Noto Sans Thai','Noto Sans',sans-serif";
+Chart.defaults.font.size = 11;
+const BASE_OPT = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#fff',titleColor:'#1a3a3d',bodyColor:'#3d6b6f',borderColor:'#c5e0e3',borderWidth:1,padding:10,cornerRadius:8}},
+  scales:{
+    x:{grid:{color:'rgba(112,197,204,0.12)',drawBorder:false},ticks:{color:'#7aabb0',font:{size:10}}},
+    y:{grid:{color:'rgba(112,197,204,0.12)',drawBorder:false},ticks:{color:'#7aabb0',font:{size:10}}}
+  }
+};
+
+// ══ AUTH ══
+function doLogin(){
+  const now = Date.now();
+  if(now < lockUntil){
+    const s = Math.ceil((lockUntil-now)/1000);
+    document.getElementById('loginAttempts').textContent = 'ล็อกอยู่ กรุณารอ '+s+' วินาที';
+    return;
+  }
+  if(document.getElementById('pwInput').value === CORRECT_PW){
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appWrap').style.display = 'block';
+    document.getElementById('loginError').style.display = 'none';
+    failCount = 0;
+    initApp();
+  } else {
+    failCount++;
+    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('pwInput').value = '';
+    if(failCount >= 5){
+      lockUntil = Date.now()+30000; failCount = 0;
+      document.getElementById('loginBtn').disabled = true;
+      document.getElementById('loginAttempts').textContent = 'กรอกผิด 5 ครั้ง — ล็อก 30 วินาที';
+      setTimeout(()=>{document.getElementById('loginBtn').disabled=false;lockUntil=0;document.getElementById('loginAttempts').textContent='';},30000);
+    } else {
+      document.getElementById('loginAttempts').textContent = 'กรอกผิด '+failCount+'/5 ครั้ง';
+    }
+  }
+}
+
+function doLogout(){
+  document.getElementById('appWrap').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('pwInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginAttempts').textContent = '';
+  failCount = 0;
+  Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});
+  for(const k in charts) delete charts[k];
+}
+
+function togglePw(){
+  const i=document.getElementById('pwInput'),b=document.getElementById('toggleBtn');
+  i.type = i.type==='password'?'text':'password';
+  b.textContent = i.type==='password'?'แสดง':'ซ่อน';
+}
+
+// ══ LOCAL STORAGE ══
+function saveToLS(key, data){
+  try{
+    localStorage.setItem(key, JSON.stringify(data));
+    return true;
+  }catch(e){
+    console.warn('localStorage full or unavailable:', e);
+    return false;
+  }
+}
+
+function loadFromLS(key){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+
+function setSaveStatus(saved){
+  const badge = document.getElementById('saveBadge');
+  const text  = document.getElementById('saveText');
+  if(saved){
+    badge.className = 'save-badge';
+    text.textContent = 'บันทึกแล้ว';
+  } else {
+    badge.className = 'save-badge unsaved';
+    text.textContent = 'ยังไม่ได้บันทึก';
+  }
+}
+
+// ══ INIT ══
+function initApp(){
+  // โหลดจาก localStorage ถ้ามี
+  const savedCC  = loadFromLS(LS_CC);
+  const savedNCR = loadFromLS(LS_NCR);
+  const ccName   = loadFromLS(LS_CC_NAME)  || 'Customer Complaint Report';
+  const ncrName  = loadFromLS(LS_NCR_NAME) || 'Non-Conformity Report';
+  const ccTime   = loadFromLS(LS_CC_TIME);
+  const ncrTime  = loadFromLS(LS_NCR_TIME);
+
+  if(savedCC && savedCC.length > 0){
+    ALL_CC_ROWS = savedCC;
+    ccData = buildDataFromRows('cc', ALL_CC_ROWS);
+    document.getElementById('ccFileName').textContent = ccName;
+    document.getElementById('ccDot').classList.remove('orange');
+  } else {
+    document.getElementById('ccDot').classList.add('orange');
+  }
+
+  if(savedNCR && savedNCR.length > 0){
+    ALL_NCR_ROWS = savedNCR;
+    ncrData = buildDataFromRows('ncr', ALL_NCR_ROWS);
+    document.getElementById('ncrFileName').textContent = ncrName;
+    document.getElementById('ncrDot').classList.remove('orange');
+  } else {
+    document.getElementById('ncrDot').classList.add('orange');
+  }
+
+  updateHint();
+  populateFilters();
+  setSaveStatus(!!(savedCC || savedNCR));
+
+  const lastTime = ncrTime || ccTime;
+  if(lastTime) document.getElementById('lastUpdate').textContent = lastTime;
+
+  switchPage('cc');
+}
+
+function updateHint(){
+  const hasCC  = ALL_CC_ROWS.length > 0;
+  const hasNCR = ALL_NCR_ROWS.length > 0;
+  const hint = document.getElementById('uploadHint');
+  if(hasCC && hasNCR){
+    hint.textContent = 'ข้อมูลโหลดจาก browser cache — คลิกชิปเพื่ออัปเดตไฟล์ใหม่';
+    hint.style.color = 'var(--dark-green)';
+  } else if(hasCC || hasNCR){
+    hint.textContent = '⚠️ โหลดแล้ว '+(hasCC?'CC':'NCR')+' — ยังขาด '+(hasCC?'NCR':'CC');
+    hint.style.color = 'var(--light-brown)';
+  } else {
+    hint.textContent = '⚠️ ยังไม่มีข้อมูล — คลิกเพื่ออัปโหลดไฟล์ Excel';
+    hint.style.color = 'var(--muted)';
+  }
+}
+
+// ══ CLEAR DATA ══
+function showClearConfirm(){ document.getElementById('confirmOverlay').style.display='flex'; }
+function hideClearConfirm(){ document.getElementById('confirmOverlay').style.display='none'; }
+function clearAllData(){
+  [LS_CC,LS_NCR,LS_CC_NAME,LS_NCR_NAME,LS_CC_TIME,LS_NCR_TIME].forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
+  ALL_CC_ROWS=[]; ALL_NCR_ROWS=[]; ccData=null; ncrData=null;
+  document.getElementById('ccFileName').textContent='Customer Complaint Report';
+  document.getElementById('ncrFileName').textContent='Non-Conformity Report';
+  document.getElementById('ccDot').classList.add('orange');
+  document.getElementById('ncrDot').classList.add('orange');
+  hideClearConfirm();
+  setSaveStatus(false);
+  updateHint();
+  switchPage('cc');
+}
+
+// ══ PAGE SWITCH ══
+function switchPage(page){
+  document.getElementById('tabBtnCC').className  = 'page-tab'+(page==='cc'?' active-cc':'');
+  document.getElementById('tabBtnNCR').className = 'page-tab'+(page==='ncr'?' active-ncr':'');
+  document.getElementById('pageCC').classList.toggle('active', page==='cc');
+  document.getElementById('pageNCR').classList.toggle('active', page==='ncr');
+  if(page==='cc') renderCC();
+  else renderNCR();
+}
+
+// ══ FILE LOADERS ══
+function loadCC(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const wb = XLSX.read(e.target.result,{type:'binary',cellDates:true});
+      const mainSheet = wb.SheetNames.includes('Sheet1')?'Sheet1':wb.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[mainSheet],{defval:''});
+      const detailSheet = 'Update Detail with Grouping';
+      if(wb.SheetNames.includes(detailSheet)){
+        const detailRows = XLSX.utils.sheet_to_json(wb.Sheets[detailSheet],{defval:''});
+        const statusMap = {};
+        detailRows.forEach(r=>{ if(r['Id']&&r['status']) statusMap[String(r['Id'])]=r['status']; });
+        rows.forEach(r=>{ if(!r['status']&&r['Id']) r['status']=statusMap[String(r['Id'])]||''; });
+      }
+      ALL_CC_ROWS = parseRowsCC(rows);
+      ccData = buildDataFromRows('cc', ALL_CC_ROWS);
+      const timeStr = getTimeStr();
+      const ok = saveToLS(LS_CC, ALL_CC_ROWS);
+      saveToLS(LS_CC_NAME, file.name);
+      saveToLS(LS_CC_TIME, timeStr);
+      document.getElementById('ccFileName').textContent = file.name;
+      document.getElementById('ccDot').classList.remove('orange');
+      document.getElementById('lastUpdate').textContent = timeStr;
+      setSaveStatus(ok);
+      updateHint();
+      populateFilters();
+      renderCC();
+      input.value='';
+      alert('✅ โหลด CC สำเร็จ: '+ALL_CC_ROWS.length+' รายการ'+(ok?'\n💾 บันทึกใน browser แล้ว':'\n⚠️ ไม่สามารถบันทึกได้ (storage เต็ม)'));
+    }catch(err){ alert('❌ ข้อผิดพลาด: '+err.message); }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function loadNCR(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const wb = XLSX.read(e.target.result,{type:'binary',cellDates:true});
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+      ALL_NCR_ROWS = parseRowsNCR(rows);
+      ncrData = buildDataFromRows('ncr', ALL_NCR_ROWS);
+      const timeStr = getTimeStr();
+      const ok = saveToLS(LS_NCR, ALL_NCR_ROWS);
+      saveToLS(LS_NCR_NAME, file.name);
+      saveToLS(LS_NCR_TIME, timeStr);
+      document.getElementById('ncrFileName').textContent = file.name;
+      document.getElementById('ncrDot').classList.remove('orange');
+      document.getElementById('lastUpdate').textContent = timeStr;
+      setSaveStatus(ok);
+      updateHint();
+      populateFilters();
+      renderNCR();
+      input.value='';
+      alert('✅ โหลด NCR สำเร็จ: '+ALL_NCR_ROWS.length+' รายการ'+(ok?'\n💾 บันทึกใน browser แล้ว':'\n⚠️ ไม่สามารถบันทึกได้ (storage เต็ม)'));
+    }catch(err){ alert('❌ ข้อผิดพลาด: '+err.message); }
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ══ PARSE EXCEL ROWS → normalized flat rows ══
+function parseRowsCC(rows){
+  if(!rows.length) return [];
+  const bk=fk(rows[0],['สาขาที่เข้ารับบริการ','สาขา']);
+  const dk=fk(rows[0],['วันที่เกิดเหตุ','วันที่']);
+  const dp=fk(rows[0],['หน่วยงานที่ถูกร้องเรียน','หน่วยงาน']);
+  const pr=fk(rows[0],['กระบวนการที่ถูก Complain','กระบวนการ']);
+  const rf=fk(rows[0],['ต้องคืนเงิน','refund']);
+  const nm=fk(rows[0],['ชื่อผู้ร้องเรียน','ชื่อ']);
+  const st=fk(rows[0],['status','สถานะ']);
+  const dt=fk(rows[0],['รายละเอียดข้อร้องเรียน','รายละเอียด']);
+  return rows.map(r=>({
+    Id: r['Id']||r['ลำดับ']||'-',
+    date: fmtD(r[dk]),
+    branch: (r[bk]||'').toString().trim(),
+    dept:   (r[dp]||'').toString().trim(),
+    process:(r[pr]||'').toString().trim(),
+    detail: ((r[dt]||r[nm]||'').toString().trim()),
+    refund: (r[rf]||'-').toString().trim(),
+    status: (r[st]||'').toString().trim(),
+  })).filter(r=>r.date!=='-'||r.branch||r.dept);
+}
+
+function parseRowsNCR(rows){
+  if(!rows.length) return [];
+  const bk=fk(rows[0],['สาขาที่เกิดเหตุการณ์','สาขา']);
+  const dk=fk(rows[0],['วันที่เกิดเหตุ','วันที่']);
+  const dp=fk(rows[0],['หน่วยงานที่พบความไม่สอดคล้อง','หน่วยงาน']);
+  const pr=fk(rows[0],['กระบวนการที่ไม่สอดคล้อง','กระบวนการ']);
+  const is=fk(rows[0],['หัวข้อเรื่องของความไม่สอดคล้อง','หัวข้อ']);
+  const dt=fk(rows[0],['รายละเอียดของความไม่สอดคล้อง','รายละเอียด']);
+  return rows.map(r=>({
+    Id: r['Id']||r['ลำดับ']||'-',
+    date: fmtD(r[dk]),
+    branch: (r[bk]||'').toString().trim(),
+    dept:   (r[dp]||'').toString().trim(),
+    process:(r[pr]||'').toString().trim(),
+    detail: ((r[dt]||r[is]||'').toString().trim()),
+  })).filter(r=>r.date!=='-'||r.branch||r.dept);
+}
+
+// ══ BUILD CHART DATA FROM ROWS ══
+function buildDataFromRows(type, rows){
+  if(type==='cc'){
+    const sorted=[...rows].sort((a,b)=>parseDate(b.date)-parseDate(a.date));
+    return{
+      total:rows.length,
+      monthly:mthCntRows(rows),
+      branch:topN(cntByField(rows,'branch'),6),
+      dept:topN(cntByField(rows,'dept'),8),
+      process:topN(cntByField(rows,'process'),10),
+      refund:cntByField(rows,'refund'),
+      status:cntByField(rows,'status'),
+      recent:sorted,
+    };
+  } else {
+    const sorted=[...rows].sort((a,b)=>parseDate(b.date)-parseDate(a.date));
+    return{
+      total:rows.length,
+      monthly:mthCntRows(rows),
+      branch:topN(cntByField(rows,'branch'),6),
+      dept:topN(cntByField(rows,'dept'),8),
+      process:topN(cntByField(rows,'process'),8),
+      issues:topN(cntByField(rows,'detail').then?{}:extractIssues(rows),8),
+      recent:sorted,
+    };
+  }
+}
+
+function extractIssues(rows){
+  // สำหรับ NCR ใช้ process เป็น issues หลัก
+  return cntByField(rows,'process');
+}
+
+// ══ FILTERS ══
+function getFilteredCC(){
+  const bf=document.getElementById('ccBranchFilter').value;
+  const df=document.getElementById('ccDeptFilter').value;
+  const yr=document.getElementById('ccYearFilter').value;
+  const mo=document.getElementById('ccMonthFilter').value;
+  return ALL_CC_ROWS.filter(r=>{
+    if(bf && r.branch!==bf) return false;
+    if(df && r.dept!==df) return false;
+    if(yr && !r.date.endsWith('/'+yr)) return false;
+    if(mo && r.date.slice(3,5)!==mo.padStart(2,'0')) return false;
+    return true;
+  });
+}
+
+function getFilteredNCR(){
+  const bf=document.getElementById('ncrBranchFilter').value;
+  const df=document.getElementById('ncrDeptFilter').value;
+  const yr=document.getElementById('ncrYearFilter').value;
+  const mo=document.getElementById('ncrMonthFilter').value;
+  return ALL_NCR_ROWS.filter(r=>{
+    if(bf && r.branch!==bf) return false;
+    if(df && r.dept!==df) return false;
+    if(yr && !r.date.endsWith('/'+yr)) return false;
+    if(mo && r.date.slice(3,5)!==mo.padStart(2,'0')) return false;
+    return true;
+  });
+}
+
+// ══ RENDER CC ══
+function renderCC(){
+  const hasData = ALL_CC_ROWS.length > 0;
+  document.getElementById('ccEmpty').style.display   = hasData?'none':'block';
+  document.getElementById('ccContent').style.display = hasData?'block':'none';
+  if(!hasData) return;
+
+  const rows = getFilteredCC();
+  const d = buildDataFromRows('cc', rows);
+  const maxM = d.monthly.reduce((a,b)=>a.count>b.count?a:b,{count:0,month:'-'});
+
+  document.getElementById('ccKpi').innerHTML=`
+    <div class="kpi cc"><div class="kpi-label">ร้องเรียนทั้งหมด</div><div class="kpi-val cc">${d.total}</div><div class="kpi-sub">เคส</div></div>
+    <div class="kpi warm"><div class="kpi-label">ต้องคืนเงิน</div><div class="kpi-val warm">${d.refund['ต้อง']||0}</div><div class="kpi-sub">${Math.round((d.refund['ต้อง']||0)/Math.max(d.total,1)*100)}% ของทั้งหมด</div></div>
+    <div class="kpi teal"><div class="kpi-label">สูงสุดต่อเดือน</div><div class="kpi-val teal">${maxM.count}</div><div class="kpi-sub">${maxM.month}</div></div>`;
+
+  dc('ccTrend');
+  const labels=d.monthly.map(m=>{const[y,mo]=m.month.split('-');return MONTH_NAMES[parseInt(mo)]+'\n'+y;});
+  charts['ccTrend']=new Chart(document.getElementById('ccTrendChart'),{data:{labels,datasets:[
+    {type:'bar',label:'จำนวนเคส',data:d.monthly.map(m=>m.count),backgroundColor:d.monthly.map(m=>m.count===maxM.count?CC_COL:CC_BG),borderColor:CC_COL,borderWidth:1,borderRadius:4,yAxisID:'y'},
+    {type:'line',label:'Trend',data:d.monthly.map(m=>m.count),borderColor:'#736357',borderWidth:2,pointRadius:3,pointBackgroundColor:'#736357',tension:0.4,fill:false,yAxisID:'y'}
+  ]},options:{...BASE_OPT,plugins:{...BASE_OPT.plugins,legend:{display:true,position:'top',align:'end',labels:{color:'#3d6b6f',font:{size:10},boxWidth:10,padding:12}}}}});
+
+  dc('ccBranch');
+  charts['ccBranch']=new Chart(document.getElementById('ccBranchChart'),{type:'doughnut',data:{labels:Object.keys(d.branch),datasets:[{data:Object.values(d.branch),backgroundColor:ARAK_PALETTE,borderWidth:2,borderColor:'#f5f9fa'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'right',labels:{color:'#3d6b6f',font:{size:9},boxWidth:9,padding:5}},tooltip:BASE_OPT.plugins.tooltip}}});
+
+  dc('ccDept');
+  charts['ccDept']=new Chart(document.getElementById('ccDeptChart'),{type:'bar',data:{labels:Object.keys(d.dept),datasets:[{data:Object.values(d.dept),backgroundColor:ARAK_PALETTE,borderRadius:4}]},options:{...BASE_OPT,indexAxis:'y',scales:{x:BASE_OPT.scales.x,y:{...BASE_OPT.scales.y,ticks:{color:'#3d6b6f',font:{size:10}}}}}});
+
+  dc('ccProcess');
+  charts['ccProcess']=new Chart(document.getElementById('ccProcessChart'),{type:'bar',data:{labels:Object.keys(d.process),datasets:[{data:Object.values(d.process),backgroundColor:CC_BG,borderColor:CC_COL,borderWidth:1,borderRadius:4}]},options:{...BASE_OPT,indexAxis:'y',scales:{x:BASE_OPT.scales.x,y:{...BASE_OPT.scales.y,ticks:{color:'#3d6b6f',font:{size:10}}}}}});
+
+  dc('ccRefund');
+  charts['ccRefund']=new Chart(document.getElementById('ccRefundChart'),{type:'doughnut',data:{labels:['ต้องคืนเงิน','ไม่ต้องคืน'],datasets:[{data:[d.refund['ต้อง']||0,d.refund['ไม่ต้อง']||0],backgroundColor:['rgba(239,130,103,0.8)','rgba(128,178,66,0.5)'],borderWidth:2,borderColor:'#f5f9fa'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{display:true,position:'right',labels:{color:'#3d6b6f',font:{size:10},boxWidth:9,padding:6}},tooltip:BASE_OPT.plugins.tooltip}}});
+
+  const statusMap={'ปิดเคส - positive':'s-closed-pos','ปิดเคส - neutral':'s-closed-neu','ปิดเคส - negative':'s-closed-neg','ยังไม่ได้ติดต่อ':'s-pending','ติดต่อไม่ได้':'s-pending'};
+  const statusEntries=Object.entries(d.status).filter(([k])=>k&&k!=='ไม่ระบุ'&&k!=='-'&&k!=='');
+  const unspecified=d.status['ไม่ระบุ']||d.status['']||0;
+  document.getElementById('ccStatusList').innerHTML=
+    statusEntries.map(([k,v])=>`<div class="status-row"><span class="s-badge ${statusMap[k]||'s-default'}">${k}</span><span class="s-count">${v}</span></div>`).join('')+
+    (unspecified?`<div class="status-row"><span style="font-size:10px;color:var(--muted)">ไม่ระบุสถานะ</span><span class="s-count" style="color:var(--muted)">${unspecified}</span></div>`:'');
+
+  ccFilteredRows = rows;
+  ccPage=1;
+  renderCCTable();
+}
+
+// ══ RENDER NCR ══
+function renderNCR(){
+  const hasData = ALL_NCR_ROWS.length > 0;
+  document.getElementById('ncrEmpty').style.display   = hasData?'none':'block';
+  document.getElementById('ncrContent').style.display = hasData?'block':'none';
+  if(!hasData) return;
+
+  const rows = getFilteredNCR();
+  const d = buildDataFromRows('ncr', rows);
+  const maxM = d.monthly.reduce((a,b)=>a.count>b.count?a:b,{count:0,month:'-'});
+  const topD = Object.entries(d.dept).sort((a,b)=>b[1]-a[1])[0]||['—',0];
+
+  document.getElementById('ncrKpi').innerHTML=`
+    <div class="kpi ncr"><div class="kpi-label">ไม่สอดคล้องทั้งหมด</div><div class="kpi-val ncr">${d.total}</div><div class="kpi-sub">เคส</div></div>
+    <div class="kpi green"><div class="kpi-label">สูงสุดต่อเดือน</div><div class="kpi-val green">${maxM.count}</div><div class="kpi-sub">${maxM.month}</div></div>
+    <div class="kpi teal"><div class="kpi-label">หน่วยงานสูงสุด</div><div class="kpi-val teal" style="font-size:15px;padding-top:5px">${topD[0]}</div><div class="kpi-sub">${topD[1]} เคส</div></div>`;
+
+  dc('ncrTrend');
+  const labels=d.monthly.map(m=>{const[y,mo]=m.month.split('-');return MONTH_NAMES[parseInt(mo)]+'\n'+y;});
+  charts['ncrTrend']=new Chart(document.getElementById('ncrTrendChart'),{data:{labels,datasets:[
+    {type:'bar',label:'จำนวนเคส',data:d.monthly.map(m=>m.count),backgroundColor:d.monthly.map(m=>m.count===maxM.count?NCR_COL:NCR_BG),borderColor:NCR_COL,borderWidth:1,borderRadius:4,yAxisID:'y'},
+    {type:'line',label:'Trend',data:d.monthly.map(m=>m.count),borderColor:'#1e6533',borderWidth:2,pointRadius:3,pointBackgroundColor:'#1e6533',tension:0.4,fill:false,yAxisID:'y'}
+  ]},options:{...BASE_OPT,plugins:{...BASE_OPT.plugins,legend:{display:true,position:'top',align:'end',labels:{color:'#3d6b6f',font:{size:10},boxWidth:10,padding:12}}}}});
+
+  dc('ncrBranch');
+  charts['ncrBranch']=new Chart(document.getElementById('ncrBranchChart'),{type:'doughnut',data:{labels:Object.keys(d.branch),datasets:[{data:Object.values(d.branch),backgroundColor:ARAK_PALETTE,borderWidth:2,borderColor:'#f5f9fa'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:true,position:'right',labels:{color:'#3d6b6f',font:{size:9},boxWidth:9,padding:5}},tooltip:BASE_OPT.plugins.tooltip}}});
+
+  dc('ncrDept');
+  charts['ncrDept']=new Chart(document.getElementById('ncrDeptChart'),{type:'bar',data:{labels:Object.keys(d.dept),datasets:[{data:Object.values(d.dept),backgroundColor:ARAK_PALETTE,borderRadius:4}]},options:{...BASE_OPT,indexAxis:'y',scales:{x:BASE_OPT.scales.x,y:{...BASE_OPT.scales.y,ticks:{color:'#3d6b6f',font:{size:10}}}}}});
+
+  dc('ncrProcess');
+  charts['ncrProcess']=new Chart(document.getElementById('ncrProcessChart'),{type:'bar',data:{labels:Object.keys(d.process),datasets:[{data:Object.values(d.process),backgroundColor:NCR_BG,borderColor:NCR_COL,borderWidth:1,borderRadius:4}]},options:{...BASE_OPT,indexAxis:'y',scales:{x:BASE_OPT.scales.x,y:{...BASE_OPT.scales.y,ticks:{color:'#3d6b6f',font:{size:10}}}}}});
+
+  dc('ncrIssue');
+  charts['ncrIssue']=new Chart(document.getElementById('ncrIssueChart'),{type:'bar',data:{labels:Object.keys(d.issues),datasets:[{data:Object.values(d.issues),backgroundColor:ARAK_PALETTE.map(c=>c+'99'),borderColor:ARAK_PALETTE,borderWidth:1,borderRadius:4}]},options:{...BASE_OPT,indexAxis:'y',scales:{x:BASE_OPT.scales.x,y:{...BASE_OPT.scales.y,ticks:{color:'#3d6b6f',font:{size:10}}}}}});
+
+  ncrFilteredRows = rows;
+  ncrPage=1;
+  renderNCRTable();
+}
+
+// ══ TABLES ══
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function detailCell(text, rowIdx, type){
+  const t=String(text||'').trim();
+  if(!t||t==='-') return`<td class="td-detail" style="color:var(--muted)">—</td>`;
+  if(t.length<=50) return`<td class="td-detail">${escHtml(t)}</td>`;
+  return`<td class="td-detail"><div class="td-detail-inner"><span class="td-detail-text">${escHtml(t)}</span><button class="btn-expand" onclick="openModal(${rowIdx},'${type}')">อ่านเพิ่ม</button></div></td>`;
+}
+
+function renderCCTable(){
+  const total=ccFilteredRows.length;
+  const pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(ccPage>pages) ccPage=pages;
+  const start=(ccPage-1)*PAGE_SIZE, end=Math.min(start+PAGE_SIZE,total);
+  const slice=ccFilteredRows.slice(start,end);
+  document.getElementById('ccTableLabel').textContent=`ทั้งหมด ${total} เคส`;
+  document.getElementById('ccTableBody').innerHTML=slice.map((r,i)=>{
+    const gIdx=ALL_CC_ROWS.indexOf(r);
+    return`<tr>
+      <td class="td-id">${escHtml(r.Id)}</td>
+      <td class="td-date">${escHtml(r.date)}</td>
+      <td><span class="badge b-cc">${escHtml(r.branch.replace('สาขา',''))}</span></td>
+      <td style="white-space:nowrap">${escHtml(r.dept)}</td>
+      <td class="td-clip">${escHtml(r.process)}</td>
+      ${detailCell(r.detail,gIdx,'cc')}
+      <td><span class="badge ${r.refund==='ต้อง'?'b-yes':'b-no'}">${r.refund==='ต้อง'?'ต้อง':'ไม่ต้อง'}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('ccPageInfo').textContent=`แสดง ${start+1}–${end} จาก ${total} รายการ`;
+  renderPagi('cc',ccPage,pages);
+}
+
+function renderNCRTable(){
+  const total=ncrFilteredRows.length;
+  const pages=Math.max(1,Math.ceil(total/PAGE_SIZE));
+  if(ncrPage>pages) ncrPage=pages;
+  const start=(ncrPage-1)*PAGE_SIZE, end=Math.min(start+PAGE_SIZE,total);
+  const slice=ncrFilteredRows.slice(start,end);
+  document.getElementById('ncrTableLabel').textContent=`ทั้งหมด ${total} เคส`;
+  document.getElementById('ncrTableBody').innerHTML=slice.map((r,i)=>{
+    const gIdx=ALL_NCR_ROWS.indexOf(r);
+    return`<tr>
+      <td class="td-id">${escHtml(r.Id)}</td>
+      <td class="td-date">${escHtml(r.date)}</td>
+      <td><span class="badge b-ncr">${escHtml(r.branch.replace('สาขา',''))}</span></td>
+      <td style="white-space:nowrap">${escHtml(r.dept)}</td>
+      <td class="td-clip">${escHtml(r.process)}</td>
+      ${detailCell(r.detail,gIdx,'ncr')}
+    </tr>`;
+  }).join('');
+  document.getElementById('ncrPageInfo').textContent=`แสดง ${start+1}–${end} จาก ${total} รายการ`;
+  renderPagi('ncr',ncrPage,pages);
+}
+
+function renderPagi(type,cur,total){
+  const el=document.getElementById(type+'PageBtns');
+  if(total<=1){el.innerHTML='';return;}
+  let html='';
+  html+=`<button class="pagi-btn" onclick="${type}GoPage(${cur-1})" ${cur===1?'disabled':''}>‹</button>`;
+  let lo=Math.max(1,cur-2),hi=Math.min(total,cur+2);
+  if(lo>1){html+=`<button class="pagi-btn" onclick="${type}GoPage(1)">1</button>`;if(lo>2)html+=`<span style="font-size:10px;color:var(--muted);padding:0 2px">…</span>`;}
+  for(let i=lo;i<=hi;i++) html+=`<button class="pagi-btn${i===cur?' active':''}" onclick="${type}GoPage(${i})">${i}</button>`;
+  if(hi<total){if(hi<total-1)html+=`<span style="font-size:10px;color:var(--muted);padding:0 2px">…</span>`;html+=`<button class="pagi-btn" onclick="${type}GoPage(${total})">${total}</button>`;}
+  html+=`<button class="pagi-btn" onclick="${type}GoPage(${cur+1})" ${cur===total?'disabled':''}>›</button>`;
+  el.innerHTML=html;
+}
+
+function ccGoPage(p){ccPage=p;renderCCTable();}
+function ncrGoPage(p){ncrPage=p;renderNCRTable();}
+
+// ══ MODAL ══
+function openModal(rowIdx, type){
+  const rows=type==='cc'?ALL_CC_ROWS:ALL_NCR_ROWS;
+  const r=rows[rowIdx]; if(!r) return;
+  document.getElementById('modalTitle').textContent=(type==='cc'?'รายละเอียด CC':'รายละเอียด NCR')+' #'+r.Id;
+  document.getElementById('modalMeta').innerHTML=
+    `<span class="modal-chip">${escHtml(r.date)}</span>`+
+    `<span class="modal-chip">${escHtml(r.branch)}</span>`+
+    `<span class="modal-chip">${escHtml(r.dept)}</span>`+
+    `<span class="modal-chip">${escHtml(r.process)}</span>`+
+    (type==='cc'&&r.refund&&r.refund!=='-'?`<span class="modal-chip" style="${r.refund==='ต้อง'?'background:var(--cc-light);color:#8b3620':'background:#eaf7ee;color:#1a5c28'}">คืนเงิน: ${escHtml(r.refund)}</span>`:'');
+  document.getElementById('modalBody').textContent=r.detail||'-';
+  document.getElementById('detailModal').style.display='flex';
+}
+function closeModal(){ document.getElementById('detailModal').style.display='none'; }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); hideClearConfirm(); } });
+
+// ══ FILTERS POPULATION ══
+function populateFilters(){
+  fillSel('ccBranchFilter', [...new Set(ALL_CC_ROWS.map(r=>r.branch).filter(Boolean))].sort(), 'ทุกสาขา');
+  fillSel('ncrBranchFilter',[...new Set(ALL_NCR_ROWS.map(r=>r.branch).filter(Boolean))].sort(),'ทุกสาขา');
+  fillSel('ccDeptFilter',  [...new Set(ALL_CC_ROWS.map(r=>r.dept).filter(Boolean))].sort(), 'ทุกหน่วยงาน');
+  fillSel('ncrDeptFilter', [...new Set(ALL_NCR_ROWS.map(r=>r.dept).filter(Boolean))].sort(),'ทุกหน่วยงาน');
+  fillYears('ccYearFilter',  ALL_CC_ROWS);
+  fillYears('ncrYearFilter', ALL_NCR_ROWS);
+  syncMonthOptions('cc');
+  syncMonthOptions('ncr');
+}
+
+function fillSel(id, vals, placeholder){
+  const sel=document.getElementById(id);
+  const cur=sel.value;
+  sel.innerHTML=`<option value="">${placeholder}</option>`;
+  vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===cur)o.selected=true;sel.appendChild(o);});
+}
+
+function fillYears(id, rows){
+  const sel=document.getElementById(id);
+  const cur=sel.value;
+  const years=[...new Set(rows.map(r=>r.date&&r.date.length===10?r.date.slice(6):null).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">ทุกปี</option>';
+  years.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;if(y===cur)o.selected=true;sel.appendChild(o);});
+}
+
+function syncMonthOptions(type){
+  const yr=document.getElementById(type+'YearFilter').value;
+  const rows=type==='cc'?ALL_CC_ROWS:ALL_NCR_ROWS;
+  const moSel=document.getElementById(type+'MonthFilter');
+  const curMo=moSel.value;
+  const months=[...new Set(
+    rows.filter(r=>!yr||(r.date&&r.date.slice(6)===yr))
+      .map(r=>r.date&&r.date.length>=5?r.date.slice(3,5):null).filter(Boolean)
+  )].sort();
+  moSel.innerHTML='<option value="">ทุกเดือน</option>';
+  months.forEach(m=>{
+    const o=document.createElement('option');
+    o.value=m; o.textContent=MONTH_NAMES[parseInt(m,10)]||m;
+    if(m===curMo) o.selected=true;
+    moSel.appendChild(o);
+  });
+}
+
+// ══ UTILITIES ══
+function dc(id){ if(charts[id]){try{charts[id].destroy();}catch(e){} delete charts[id];} }
+
+function cntByField(rows, field){
+  const m={};
+  rows.forEach(r=>{const v=(r[field]||'').toString().trim();if(v&&v!=='-')m[v]=(m[v]||0)+1;});
+  return m;
+}
+
+function topN(obj,n){ return Object.fromEntries(Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,n)); }
+
+function mthCntRows(rows){
+  const m={};
+  rows.forEach(r=>{
+    const d=r.date;
+    if(!d||d==='-'||d.length<10) return;
+    const parts=d.split('/');
+    if(parts.length<3) return;
+    const ym=parts[2]+'-'+parts[1].padStart(2,'0');
+    m[ym]=(m[ym]||0)+1;
+  });
+  return Object.entries(m).sort((a,b)=>a[0]>b[0]?1:-1).map(([month,count])=>({month,count}));
+}
+
+function parseDate(dStr){
+  if(!dStr||dStr==='-') return 0;
+  const p=dStr.split('/');
+  if(p.length<3) return 0;
+  return new Date(p[2],parseInt(p[1],10)-1,parseInt(p[0],10)).getTime();
+}
+
+function fmtD(v){
+  if(!v) return '-';
+  if(typeof v==='string'&&v.includes('/')){
+    const p=v.split('/');
+    if(p.length===3) return p[0].padStart(2,'0')+'/'+p[1].padStart(2,'0')+'/'+p[2];
+    return v;
+  }
+  const d=v instanceof Date?v:new Date(v);
+  if(isNaN(d)) return String(v);
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
+
+function fk(obj, candidates){
+  if(!obj) return candidates[0];
+  for(const c of candidates){
+    const k=Object.keys(obj).find(k=>k.includes(c));
+    if(k) return k;
+  }
+  return candidates[0];
+}
+
+function getTimeStr(){
+  const n=new Date();
+  return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0')+' — '+n.getDate()+'/'+String(n.getMonth()+1).padStart(2,'0')+'/'+n.getFullYear();
+}
+</script>
+</body>
+</html>
